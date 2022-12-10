@@ -1,8 +1,7 @@
 from tkinter import *
 from tkinter import ttk
-from Clients import orbico
-
-
+from Clients import orbico, vali
+import logging
 class Main(Tk):
     runOnce = True
     isInterface = False
@@ -11,8 +10,14 @@ class Main(Tk):
     # controller = Controller()
 
     def __init__(self, *args, **kwargs):
-        self.orbico = orbico.Orbico()
+        logging.basicConfig(filename='app.log', filemode='w',
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        # logging.warning('This will get logged to a file')
+
+        self.vali = vali.Vali(logging)
+        # self.orbico = orbico.Orbico()
         if self.isInterface:
+
             Tk.__init__(self, *args, **kwargs)
             self.geometry('500x300')
             self.title("DataSorter")
@@ -23,7 +28,8 @@ class Main(Tk):
 
 
     def run(self):
-        self.orbico.run()
+        # self.orbico.run()
+        self.vali.run()
 
     def loop(self):
         if self.appRunningFlag:

@@ -6,7 +6,7 @@ class Excel:
     positions = {
         'name': False,
         'price': False,
-        'price_tx': False,
+        # 'price_tx': False,
     }
     positionsSet = False
 
@@ -32,12 +32,12 @@ class Excel:
             self.positionsSet = set
         return self.positionsSet
 
-    def foreach(self):
-        sh = self.sh
-        for i in range(1, sh.max_row + 1):
-            print("\n")
-            print("Row ", i, " data :")
-
-            for j in range(1, sh.max_column + 1):
-                cell_obj = sh.cell(row=i, column=j)
-                print(cell_obj.value, end=" ")
+    # def foreach(self):
+    #     sh = self.sh
+    #     for i in range(1, sh.max_row + 1):
+    #         print("\n")
+    #         print("Row ", i, " data :")
+    #
+    #         for j in range(1, sh.max_column + 1):
+    #             cell_obj = sh.cell(row=i, column=j)
+    #             print(cell_obj.value, end=" ")
