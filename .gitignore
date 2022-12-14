@@ -1,3 +1,5 @@
 /venv
 /ToSort
 .idea
+/public
+app.log
