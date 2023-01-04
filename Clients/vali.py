@@ -14,16 +14,14 @@ class Vali:
 
     def __init__(self, *args, **kwargs):
         self.logging = args[0]
-        # self.logging.warning('This will get logged to a fileeeee')
         self.db = DB.Connection(*args)
-        self.request = Requests.Requests('vali', self.headers, *args, *kwargs)
+        self.request = Requests.Requests(self.headers, *args, *kwargs)
         self.files = Files.Files(*args)
         response = self.request.get(self.url + 'categories')
         if response:
             self.categories = response.json()
 
     def run(self):
-        # products = self.request.get(self.url + 'products')
         products = []
         response = self.request.get(self.url + 'products')
         if response:
@@ -32,15 +30,16 @@ class Vali:
         #     {'id': 143, 'idWF': 6160, 'reference_number': 'HDD-SATA3-1000WD-BLUE', 'manufacturer_id': 130, 'status': 1,
         #      'price_client': 77.45, 'price_partner': 68.09, 'show': True, 'categories': [{'id': 496}]}
         # ]
+        # print('products')
         # print(products)
         i = 0
         for product in products:
-            # print(product)
-            # exit()
             i = i + 1
-            if i == 15:
-                exit()
+            if i == 1000:
+                break
             netcost_cat_id = self.handle_category(product['categories'])
+            print('netcost_cat_id')
+            print(netcost_cat_id)
             if netcost_cat_id is False:
                 # ToDo decide what to do if we fail to assign category to products
                 continue
@@ -53,18 +52,15 @@ class Vali:
             if not product_detail:
                 self.logging.info('Product details not found for product_id:' + str(product['id']))
 
-            print('netcost_cat_id')
-            print(netcost_cat_id)
+            # print('netcost_cat_id')
+            # print(netcost_cat_id)
 
             self.insert_product(product_detail, netcost_cat_id)
-            # exit()
-            # print(product_detail)
+            # ToDo
+        return True
 
     def insert_product(self, product_detail, netcost_cat_id):
-        print('product_detail')
-        print(product_detail)
-        # return True
-        # exit()
+
         name = None
         slug = None
         for item in product_detail['name']:
@@ -74,19 +70,13 @@ class Vali:
                 slug = item['text'].replace(" ", "-").replace(',', "")
 
         if name is None:
+            # Fix when there is no name
             self.logging.error('Vali insert_product no bg name product_detail: ' + str(product_detail) + ' Slug: ' + str(slug))
-            return False
+            name = 'Няма име'
         is_netcost_product = self.db.fetch_one('SELECT * FROM products WHERE name=%s', (name,))
-        # print('is_netcost_product')
-        # print(is_netcost_product)
-        # exit()
 
-        # Temp
-        # is_netcost_product = None
         if is_netcost_product is not None:
-            print('is_netcost_product')
-            print(is_netcost_product)
-            self.files.upload_image(product_detail['images'], is_netcost_product[0])
+            self.files.upload_images(product_detail['images'], is_netcost_product[0])
             return True
 
         description = None
@@ -97,10 +87,10 @@ class Vali:
         if len(description) == 0:
             description = name
 
-        # ToDo Which is discount
-        end_price = product_detail['price_client']
+        # PRICING
         recommended_price = product_detail['price_client']
         dealer_price = product_detail['price_partner']
+        end_price = float(product_detail['price_partner']) + (3 * float(product_detail['price_partner'])) / 100
 
         active = 0
         if product_detail['show']:
@@ -112,19 +102,26 @@ class Vali:
 
         sql = "INSERT INTO products (name,slug,description,end_price,recommended_price,dealer_price,category_id,active,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         inserted = self.db.insert_return_id(sql, netcost_tuple)
-        if inserted and product_detail['images']:
-            self.files.upload_image(product_detail['images'], inserted)
+
         print('inserted')
         print(inserted)
-        # if product_detail['id'] == 219:
-        #     exit()
+        if inserted:
+            if product_detail['images']:
+                self.files.upload_images(product_detail['images'], inserted)
+            return True
+        return False
 
     def handle_category(self, product_categories):
         vali_cat = self.get_vali_category(product_categories)
         if vali_cat is False:
             self.logging.error(
                 'Vali category not found in all vali categories product_categories: ' + str(product_categories))
-            return False
+            # Fix for now for products without categories
+            vali_cat = {
+                'name': 'Други',
+                'parent': 0
+            }
+            # return False
         netcost_cat = self.check_if_netcost_category_exists(vali_cat['name'])
         if netcost_cat is False:
             netcost_parent_id = None
@@ -189,3 +186,6 @@ class Vali:
             if cat['id'] in listproduct_categories:
                 return cat
         return False
+
+    def get_percentage_increase(self, num_a, num_b):
+        return ((num_a - num_b) / num_b) * 100

@@ -4,10 +4,9 @@ import requests
 class Requests:
     headers = None
 
-    def __init__(self, *args, **kwargs):
-        self.name = args[0]
-        self.headers = args[1]
-        self.logging = args[2]
+    def __init__(self, *args):
+        self.headers = args[0]
+        self.logging = args[1]
 
     def get(self, url, headers=None, stream=None):
         if not headers and self.headers:

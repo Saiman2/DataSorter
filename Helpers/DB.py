@@ -10,11 +10,19 @@ class Connection:
         # print(os.getenv('DB_PORT'))
         # exit()
         try:
+            # dev
             self.connection = mysql.connector.connect(host='localhost',
                                                user='root',
                                                password='',
                                                database='netcost',
                                                port='3306')
+
+            # prod
+            # self.connection = mysql.connector.connect(host='217.76.58.30',
+            #                                           user='forge',
+            #                                           password='aEXgPiaa5Kfu1XKZMtym',
+            #                                           database='netcost',
+            #                                           port='3306')
         except Exception as Argument:
             self.logging.error("Exception occurred: " + str(Argument), exc_info=True)
 
@@ -98,3 +106,8 @@ class Connection:
                                                password='',
                                                database='netcost',
                                                port='3306')
+        # self.connection = mysql.connector.connect(host='217.76.58.30',
+        #                                           user='forge',
+        #                                           password='aEXgPiaa5Kfu1XKZMtym',
+        #                                           database='netcost',
+        #                                           port='3306')
